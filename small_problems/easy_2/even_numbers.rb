@@ -1,0 +1,1 @@
+100.times { |index| puts index + 1 if (index + 1).even? }
