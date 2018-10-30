@@ -8,7 +8,7 @@ end
 
 def letter_percentages(string)
 
-  counts = {lowercase: 0, uppercase: 0, neither: 0}
+  counts = { lowercase: 0, uppercase: 0, neither: 0 }
 
   string.chars.each do |char|
     if upper_case?(char)
@@ -21,7 +21,7 @@ def letter_percentages(string)
   end
 
   counts = counts.map do |key, count|
-    [key, ((count.to_f / string.length) * 100)]
+    [key, ((count / string.length.to_f) * 100)]
   end
   counts.to_h
 end
