@@ -11,51 +11,97 @@
 
 require 'pry'
 
-board = [
-  ['*', '*', '*'],
-  ['*', '*', '*'],
-  ['*', '*', '*'],
-]
+play_again = true
 
 def print_board(board)
+  puts
   board.each do |row|
     row.each { |item| print item }
     puts
-  end 
+  end
+  puts
 end
 
 def prompt(message)
-  puts "==> #{message}"
+  print "==> #{message}: "
 end
 
-def integer?(string)
-  string.to_i.to_s == string
-end
-
-def valid_move?(user_move, board)
-  coordinate_array = user_move.split(',')
-  coordinate_array.length == 2 && 
-    coordinate_array[0].to_i > 0 && coordinate_array[1].to_i > 0 &&
-    coordinate_array.all? { |element| integer?(element) } &&
-    board[coordinate_array[0].to_i - 1][coordinate_array[1].to_i - 1] == '*'
+def valid_move?(move, board)
+  move.length == 2 && board[move[0] - 1][move[1] - 1] == '*'
 end
 
 def user_move(board)
   user_move = nil
   loop do
-    prompt 'Which tile do you want to pick? (row, col)'
-    user_move = gets.chomp
+    prompt 'Which square do you want to pick? (row, col)'
+    user_move = gets.chomp.split(',').map { |item| item.to_i }
     break if valid_move?(user_move, board)
-    prompt 'Invalid move. Tile must be available and instruction must be in format "row, col"'
+    prompt 'Invalid move. Square must be available and instruction must be in format "row, col".'
   end
 
-  user_move = user_move.split(',').map { |move| move.to_i }
-  board[user_move[0]][user_move[1]] = 'x'
+  board[user_move[0] - 1][user_move[1] - 1] = 'x'
   board
 end
 
-print_board(board)
-board = user_move(board)
-print_board(board)
+def random_move
+  [rand(1..3), rand(1..3)]
+end
 
+def computer_move(board)
+  return board if !moves_available?(board)
+  move = random_move
+  until valid_move?(move, board)
+    move = random_move
+    move
+  end
+  board[move[0] - 1][move[1] - 1] = 'o'
+  board
+end
 
+def player_won?(player_piece, board)
+  board.any? { |row| row.count(player_piece) == 3 }
+end
+
+def moves_available?(board)
+  board.any? { |row| row.count('*') > 0 }
+end
+
+def check_for_winner(board)
+  if player_won?('x', board)
+    'human'
+  elsif player_won?('o', board)
+    'computer'
+  end
+end
+
+while play_again 
+
+  board = [
+    ['*', '*', '*'],
+    ['*', '*', '*'],
+    ['*', '*', '*'],
+  ]
+
+  winner = nil
+
+  until winner || !moves_available?(board) 
+    print_board(board)
+    board = user_move(board)
+    board = computer_move(board)
+    winner = check_for_winner(board)
+  end
+
+  print_board(board)
+
+  if winner
+    puts "#{winner} won!"
+  else
+    puts 'tie!'
+  end
+
+  prompt 'Play again? (y/n)'
+  user_response = gets.chomp
+  play_again = user_response == 'y' ? true : false
+end
+
+prompt 'Goodbye!'
