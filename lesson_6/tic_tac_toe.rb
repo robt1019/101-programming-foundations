@@ -1,6 +1,7 @@
 require 'pry'
 
 def print_board(board)
+  system 'clear'
   puts
   puts "     |     |"
   puts "  #{board[0][0]}  |  #{board[0][1]}  |  #{board[0][2]}"
@@ -28,9 +29,10 @@ def get_user_move(board)
   user_move = nil
   loop do
     prompt 'Which square do you want to pick? (row, col)'
-    user_move = gets.chomp.split(',').map { |item| item.to_i }
+    user_move = gets.chomp.split(',').map(&:to_i)
     break if valid_move?(user_move, board)
-    puts 'Invalid move. Square must be available and instruction must be in format "row, col".'
+    puts 'Invalid move. Square must be available and ' \
+      'instruction must be in format "row, col".'
   end
   user_move
 end
@@ -57,7 +59,7 @@ def winning_move(board, player_piece)
     until valid_move?(move, board)
       move = random_move
     end
-    winner = player_won?(player_piece, do_move(move, board, player_piece)) 
+    winner = player_won?(player_piece, do_move(move, board, player_piece))
     attempts += 1
   end
   return move if winner
@@ -81,7 +83,7 @@ def attempt_non_human_winning_move(board)
 end
 
 def optimal_computer_move(board)
- winning_move(board, 'O') || attempt_non_human_winning_move(board)
+  winning_move(board, 'O') || attempt_non_human_winning_move(board)
 end
 
 def computer_move(board)
@@ -94,7 +96,7 @@ end
 
 def complete_col?(player_piece, board)
   0.upto(2).to_a.any? do |index|
-    board[0][index] == player_piece && 
+    board[0][index] == player_piece &&
       board[1][index] == player_piece &&
       board[2][index] == player_piece
   end
@@ -124,47 +126,42 @@ def check_for_winner(board)
   end
 end
 
-def play_game
-  play_again = true
+play_again = true
 
-  while play_again 
+while play_again
 
-    board = [
-      [' ', ' ', ' '],
-      [' ', ' ', ' '],
-      [' ', ' ', ' '],
-    ]
+  board = [
+    [' ', ' ', ' '],
+    [' ', ' ', ' '],
+    [' ', ' ', ' ']
+  ]
 
-    winner = nil
-    human_turn = true
+  winner = nil
+  human_turn = true
 
-    loop do 
-      if human_turn
-        print_board(board)
-        board = user_move(board)
-      else
-        board = computer_move(board)
-      end
-      winner = check_for_winner(board)
-      break if winner || !moves_available?(board)
-      human_turn = !human_turn
-    end
-
-    print_board(board)
-
-    if winner
-      puts "#{winner} won!"
+  loop do
+    if human_turn
+      print_board(board)
+      board = user_move(board)
     else
-      puts 'tie!'
+      board = computer_move(board)
     end
-
-    prompt 'Play again? (y/n)'
-    user_response = gets.chomp
-    play_again = user_response == 'y' ? true : false
+    winner = check_for_winner(board)
+    break if winner || !moves_available?(board)
+    human_turn = !human_turn
   end
 
-  puts 'Goodbye!'
+  print_board(board)
 
+  if winner
+    puts "#{winner} won!"
+  else
+    puts 'tie!'
+  end
+
+  prompt 'Play again? (y/n)'
+  user_response = gets.chomp
+  play_again = user_response == 'y' ? true : false
 end
 
-play_game
+puts 'Goodbye!'
