@@ -1,5 +1,3 @@
-require 'pry'
-
 def print_board(board)
   system 'clear'
   puts
@@ -83,6 +81,7 @@ def attempt_non_human_winning_move(board)
 end
 
 def optimal_computer_move(board)
+  return [2,2] if valid_move?([2,2], board)
   winning_move(board, 'O') || attempt_non_human_winning_move(board)
 end
 
