@@ -36,4 +36,4 @@ def circle(r)
   end
 end
 
-circle(20)    
+circle(20)
