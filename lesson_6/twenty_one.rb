@@ -26,7 +26,6 @@ def pick_card!(deck)
 end
 
 def adjust_hand_ace_values!(hand)
-  high_aces = nil
   loop do
     high_aces = hand.select { |card| card[:value] == 11 }
     break if high_aces.empty? || hand_value(hand) <= MAX_SCORE
