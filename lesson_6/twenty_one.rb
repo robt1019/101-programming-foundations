@@ -1,14 +1,4 @@
-# 1. Initialize deck
-# 2. Deal cards to player and dealer
-# 3. Player turn: hit or stay
-#   - repeat until bust or "stay"
-# 4. If player bust, dealer wins.
-# 5. Dealer turn: hit or stay
-#   - repeat until total >= 17
-# 6. If dealer bust, player wins.
-# 7. Compare cards and declare winner.
-
-CARDS = [ 
+CARDS = ([
   { value: 2, name: '2' },
   { value: 3, name: '3' },
   { value: 4, name: '4' },
@@ -22,18 +12,16 @@ CARDS = [
   { value: 10, name: 'Queen' },
   { value: 10, name: 'King' },
   { value: 11, name: 'Ace' }
-]
+] * 4).flatten
+VALID_COMMANDS = ['stick', 'twist']
+MAX_SCORE = 21
+DEALER_MAX_TWIST_VALUE = 17
 
 def prompt(message)
   puts "==> #{message}"
 end
 
-def initialise_deck()
-  unshuffled_cards = CARDS * 4 
-  unshuffled_cards.flatten.shuffle
-end
-
-def deal_card!(deck)
+def pick_card!(deck)
   deck.delete_at(rand(deck.length))
 end
 
@@ -41,15 +29,14 @@ def adjust_hand_ace_values!(hand)
   high_aces = nil
   loop do
     high_aces = hand.select { |card| card[:value] == 11 }
-    break if high_aces.length == 0 || hand_value(hand) <= 21
+    break if high_aces.empty? || hand_value(hand) <= MAX_SCORE
     high_ace_index = hand.find_index { |card| card[:value] == 11 }
     hand[high_ace_index][:value] = 1
   end
-  hand
 end
 
 def hand_value(hand)
-  hand.reduce(0) { |total, card| total += card[:value] }
+  hand.reduce(0) { |total, card| total + card[:value] }
 end
 
 def print_player_hand(hand)
@@ -62,61 +49,66 @@ def print_dealer_hand(hand)
   puts "Dealer is showing #{hand_values}"
 end
 
-def player_turn!(deck, player_cards)
-  valid_commands = ['stick', 'twist']
-  stick = false
-  user_input = nil
+def user_input
+  input = nil
   loop do
-    loop do
-      prompt "Stick or twist? ('stick' for stick, or 'twist' for twist)"
-      user_input = gets.chomp
-      break if valid_commands.include?(user_input.downcase)
-      puts "Invalid command. 'stick' or 'twist'"
-    end
-    if user_input == 'twist'
-      player_cards << deal_card!(deck)
+    prompt "Stick or twist? ('stick' for stick, or 'twist' for twist)"
+    input = gets.chomp
+    break if VALID_COMMANDS.include?(input.downcase)
+    puts "Invalid command. 'stick' or 'twist'"
+  end
+  input
+end
+
+def player_turn!(deck, player_cards)
+  stick = false
+  loop do
+    player_move = user_input
+    if player_move == 'twist'
+      player_cards << pick_card!(deck)
       adjust_hand_ace_values!(player_cards)
       print_player_hand(player_cards)
     else
       stick = true
     end
-    break if hand_value(player_cards) >= 21 || stick
+    break if hand_value(player_cards) > MAX_SCORE || stick
   end
-  hand_value(player_cards)
 end
 
 def dealer_turn!(deck, dealer_cards)
   loop do
-    break if hand_value(dealer_cards) >= 21 || hand_value(dealer_cards) >= 17
-    dealer_cards << deal_card!(deck)
+    break if hand_value(dealer_cards) >= MAX_SCORE ||
+             hand_value(dealer_cards) >= DEALER_MAX_TWIST_VALUE
+    dealer_cards << pick_card!(deck)
     adjust_hand_ace_values!(dealer_cards)
   end
-  hand_value(dealer_cards)
 end
 
-deck = initialise_deck
-player_score = 0
-dealer_score = 0
-player_cards = [deal_card!(deck), deal_card!(deck)]
-dealer_cards = [deal_card!(deck), deal_card!(deck)]
+# Main Game
+
+deck = CARDS.shuffle
+player_cards = [pick_card!(deck), pick_card!(deck)]
+dealer_cards = [pick_card!(deck), pick_card!(deck)]
 
 print_player_hand(player_cards)
 print_dealer_hand([dealer_cards[1]])
 
-player_score = player_turn!(deck, player_cards)
+player_turn!(deck, player_cards)
+player_score = hand_value(player_cards)
 
-if player_score > 21 
+if player_score > MAX_SCORE
   puts "Player is bust with a score of #{player_score}. Dealer wins."
 else
-  dealer_score = dealer_turn!(deck, dealer_cards)
-end
-
-if dealer_score > 21
-  puts "Dealer is bust. Player wins with a score of #{player_score}"
-else
-  if dealer_score > player_score
-    puts "Dealer wins with a score of #{dealer_score} to player's #{player_score}"
+  dealer_turn!(deck, dealer_cards)
+  print_dealer_hand(dealer_cards)
+  dealer_score = hand_value(dealer_cards)
+  if dealer_score > MAX_SCORE
+    puts "Dealer is bust. Player wins with a score of #{player_score}"
+  elsif dealer_score > player_score
+    puts 'Dealer wins with a score of ' \
+    "#{dealer_score} to player's #{player_score}"
   else
-    puts "Player wins with a score of #{player_score} to dealer's #{dealer_score}"
+    puts 'Player wins with a score of ' \
+    "#{player_score} to dealer's #{dealer_score}"
   end
 end
